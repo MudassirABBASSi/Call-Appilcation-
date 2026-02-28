@@ -132,6 +132,9 @@ CREATE TABLE assignments (
 
 ## 🚀 Installation & Setup
 
+### 🌐 Using GitHub Codespaces?
+See [CODESPACES_GUIDE.md](CODESPACES_GUIDE.md) for detailed instructions on running this app in Codespaces.
+
 #### Seed Data
 In order to exercise assignment and student features you may want to create sample teachers, students and classes using the Admin panel. Assign students to teachers by editing student records.
 
