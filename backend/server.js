@@ -8,6 +8,9 @@ const studentRoutes = require('./routes/student');
 const attendanceRoutes = require('./routes/attendance');
 const assignmentRoutes = require('./routes/assignments');
 const submissionRoutes = require('./routes/submissions');
+const classRoutes = require('./routes/classes');
+const notificationRoutes = require('./routes/notifications');
+const notificationScheduler = require('./utils/notificationScheduler');
 
 const app = express();
 
@@ -26,6 +29,8 @@ app.use('/api/student', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/classes', classRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Default route
 app.get('/', (req, res) => {
@@ -36,4 +41,11 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  
+  // Start notification scheduler
+  try {
+    notificationScheduler.start();
+  } catch (err) {
+    console.error('Failed to start notification scheduler:', err);
+  }
 });

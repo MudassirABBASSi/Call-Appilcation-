@@ -6,6 +6,8 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
     title: '',
     description: '',
     date: '',
+    start_time: '',
+    end_time: '',
     teacher_id: '',
     student_ids: []
   });
@@ -19,11 +21,13 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
   useEffect(() => {
     if (isOpen) {
       fetchTeachers();
-      fetchStudents();
+      setStudents([]); // reset until teacher selected
       setFormData({
         title: '',
         description: '',
         date: '',
+        start_time: '',
+        end_time: '',
         teacher_id: '',
         student_ids: []
       });
@@ -43,13 +47,17 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
     }
   };
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (teacherId) => {
+    if (!teacherId) {
+      setStudents([]);
+      return;
+    }
     setLoadingStudents(true);
     try {
-      const response = await adminAPI.getStudents();
+      const response = await adminAPI.getStudentsByTeacher(teacherId);
       setStudents(response.data);
     } catch (err) {
-      setError('Failed to load students');
+      setError('Failed to load students for selected teacher');
     } finally {
       setLoadingStudents(false);
     }
@@ -61,6 +69,9 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
       ...prev,
       [name]: value
     }));
+    if (name === 'teacher_id') {
+      fetchStudents(value);
+    }
   };
 
   const handleStudentSelect = (e) => {
@@ -218,10 +229,10 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="date">Date & Time</label>
+            <label htmlFor="date">Date</label>
             <input
               id="date"
-              type="datetime-local"
+              type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
@@ -229,6 +240,58 @@ const ClassModal = ({ isOpen, onClose, onSave }) => {
               disabled={loading}
               style={styles.input}
             />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label htmlFor="start_time">Start Time</label>
+            <input
+              id="start_time"
+              type="time"
+              name="start_time"
+              value={formData.start_time}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label htmlFor="end_time">End Time</label>
+            <input
+              id="end_time"
+              type="time"
+              name="end_time"
+              value={formData.end_time}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label htmlFor="teacher_id">Select Teacher</label>
+            {loadingTeachers ? (
+              <div style={styles.loadingText}>Loading teachers...</div>
+            ) : (
+              <select
+                id="teacher_id"
+                name="teacher_id"
+                value={formData.teacher_id}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                style={styles.input}
+              >
+                <option value="">-- Select a Teacher --</option>
+                {teachers.map(teacher => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name} ({teacher.email})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div style={styles.infoBox}>
