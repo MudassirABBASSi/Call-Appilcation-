@@ -106,13 +106,13 @@ class Submission {
         return rows;
     }
 
-    static async updateGrade(id, marks, feedback) {
+    static async updateGrade(id, marks_obtained, feedback) {
         const query = `
             UPDATE submissions 
             SET marks = ?, feedback = ?, status = 'graded', updated_at = NOW()
             WHERE id = ?
         `;
-        const [result] = await db.promise().query(query, [marks, feedback, id]);
+        const [result] = await db.promise().query(query, [marks_obtained, feedback, id]);
         return result.affectedRows > 0;
     }
 

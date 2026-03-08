@@ -1,10 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { colors } from '../styles/colors';
+import NotificationBell from './NotificationBell';
+import HamburgerMenu from './HamburgerMenu';
+import { useTheme } from '../context/ThemeContext';
+import '../styles/navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ isSidebarOpen = false, onToggleSidebar }) => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const { theme, toggleTheme } = useTheme();
+  const canToggleSidebar = typeof onToggleSidebar === 'function';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -13,13 +18,30 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={styles.navbar}>
-      <div style={styles.logo}>
-        <h2 style={styles.logoText}>Alburhan Classroom</h2>
+    <nav className="navbar">
+      <div className="navbar-left">
+        {canToggleSidebar && (
+          <HamburgerMenu
+            isOpen={isSidebarOpen}
+            onClick={onToggleSidebar}
+          />
+        )}
+        <div className="navbar-logo">
+          <h2>Alburhan Classroom</h2>
+        </div>
       </div>
-      <div style={styles.navRight}>
-        <span style={styles.userName}>Welcome, {user.name || 'User'}</span>
-        <button onClick={handleLogout} style={styles.logoutBtn}>
+      <div className="navbar-right">
+        <span className="navbar-username">Welcome, {user.name || 'User'}</span>
+        <NotificationBell />
+        <button 
+          onClick={toggleTheme} 
+          className="navbar-theme-toggle"
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          aria-label="Toggle theme"
+        >
+          {theme === 'light' ? '🌙' : '☀️'}
+        </button>
+        <button onClick={handleLogout} className="navbar-logout-btn">
           Logout
         </button>
       </div>
@@ -27,48 +49,5 @@ const Navbar = () => {
   );
 };
 
-const styles = {
-  navbar: {
-    backgroundColor: colors.primary,
-    color: colors.white,
-    padding: '15px 30px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center'
-  },
-  logoText: {
-    margin: 0,
-    fontSize: '1.5rem',
-    color: colors.secondary
-  },
-  navRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px'
-  },
-  userName: {
-    fontSize: '1rem'
-  },
-  logoutBtn: {
-    backgroundColor: colors.secondary,
-    color: colors.white,
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    transition: 'background-color 0.3s'
-  }
-};
-
 export default Navbar;
+

@@ -2,6 +2,9 @@ const Class = require('../models/Class');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const crypto = require('crypto');
+const db = require('../config/db');
+const { enrollAllStudentsOfTeacher } = require('../utils/autoEnrollment');
+const notificationHelper = require('../utils/notificationHelper');
 
 const teacherController = {
   // Create class
@@ -25,14 +28,66 @@ const teacherController = {
         teacher_id: teacherId
       };
 
-      Class.create(classData, (err, result) => {
+      Class.create(classData, async (err, result) => {
         if (err) {
           return res.status(500).json({ message: 'Error creating class', error: err });
         }
 
+        const classId = result.insertId;
+        
+          // Auto-enroll ALL students in this new class (not just teacher's assigned students)
+        try {
+            const studentsQuery = 'SELECT id FROM users WHERE role = "student"';
+            const students = await new Promise((resolve, reject) => {
+              db.query(studentsQuery, (err, results) => {
+                if (err) reject(err);
+                resolve(results || []);
+              });
+            });
+
+            let enrolled = 0;
+            for (const student of students) {
+              try {
+                await new Promise((resolve, reject) => {
+                  db.query(
+                    'INSERT INTO class_students (class_id, student_id) VALUES (?, ?)',
+                    [classId, student.id],
+                    (err) => {
+                      if (err && err.code !== 'ER_DUP_ENTRY') reject(err);
+                      resolve();
+                    }
+                  );
+                });
+                enrolled++;
+              } catch (err) {
+                // Skip if already enrolled
+                if (err.code !== 'ER_DUP_ENTRY') {
+                  console.error(`Error enrolling student ${student.id}:`, err.message);
+                }
+              }
+            }
+            console.log(`✅ Auto-enrolled ${enrolled} student(s) in new class ${classId}`);
+            
+            // Send notifications to enrolled students
+            try {
+              const teacherName = req.user.name || 'Teacher';
+              await notificationHelper.notifyNewClass(
+                classId,
+                title,
+                teacherName,
+                new Date(date)
+              );
+              console.log(`✅ Sent ${enrolled} notification(s) for new class`);
+            } catch (notifErr) {
+              console.error('Notification warning:', notifErr);
+            }
+        } catch (autoEnrollErr) {
+          console.error('Auto-enrollment warning:', autoEnrollErr);
+        }
+
         res.status(201).json({
           message: 'Class created successfully',
-          classId: result.insertId,
+          classId: classId,
           roomId: roomId
         });
       });
@@ -60,6 +115,27 @@ const teacherController = {
     User.getStudentsByTeacherId(teacherId, (err, results) => {
       if (err) {
         return res.status(500).json({ message: 'Database error', error: err });
+      }
+      res.json(results || []);
+    });
+  },
+
+  // Get class-student mappings for teacher's classes
+  getClassStudents: (req, res) => {
+    const teacherId = req.user.id;
+
+    const query = `
+      SELECT cs.class_id, cs.student_id, c.title as class_title, u.name as student_name
+      FROM class_students cs
+      JOIN classes c ON cs.class_id = c.id
+      JOIN users u ON cs.student_id = u.id
+      WHERE c.teacher_id = ? AND u.role = 'student'
+      ORDER BY u.name ASC, c.title ASC
+    `;
+
+    db.query(query, [teacherId], (err, results) => {
+      if (err) {
+        return res.status(500).json({ message: 'Database error', error: err.message });
       }
       res.json(results || []);
     });

@@ -35,6 +35,6 @@ CREATE TABLE attendance (
   UNIQUE KEY unique_attendance (student_id, class_id)
 );
 
--- Insert default admin user (password: admin123)
+-- Insert default admin user (password: Abbassi786)
 INSERT INTO users (name, email, password, role) VALUES 
-('Admin', 'admin@alburhan.com', '$2a$10$8vJ5YvGzX7h0YqR5YqR5YuKZW5vJ5YvGzX7h0YqR5YqR5YuKZW5vJ', 'admin');
+('Admin', 'mudassirabbassi786@gmail.com', '$2a$10$z9quZg0ZBN7CzlQVLd7g1OacqUR4BLCjntzo2cwZAz05w.WubG0.K', 'admin');

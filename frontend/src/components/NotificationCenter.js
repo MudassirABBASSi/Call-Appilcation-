@@ -1,164 +1,153 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api';
-import '../styles/dashboard.css';
+import { notificationsAPI } from '../api/api';
+import { colors } from '../styles/colors';
+import '../styles/notification-center.css';
 
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [showPanel, setShowPanel] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
-    fetchUnreadCount();
-    
-    // Poll for new notifications every 10 seconds
-    const interval = setInterval(() => {
-      fetchUnreadCount();
-    }, 10000);
-
+    const interval = setInterval(fetchNotifications, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/notifications');
-      if (response.data.success) {
-        setNotifications(response.data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
+      const response = await notificationsAPI.getNotifications();
+      const notifs = response.data.notifications || [];
+      setNotifications(notifs);
+      
+      const unread = notifs.filter(n => !n.is_read).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await api.get('/notifications/unread/count');
-      if (response.data.success) {
-        setUnreadCount(response.data.unread_count);
-      }
-    } catch (err) {
-      console.error('Error fetching unread count:', err);
-    }
-  };
-
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await api.put(`/notifications/${notificationId}/read`);
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-      fetchUnreadCount();
-    } catch (err) {
-      console.error('Error marking notification as read:', err);
+      await notificationsAPI.markAsRead(notificationId);
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.put('/notifications/read-all');
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Error marking all as read:', err);
+      await notificationsAPI.markAllAsRead();
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
     }
   };
 
-  const handleDelete = async (notificationId) => {
+  const handleDeleteNotification = async (notificationId) => {
     try {
-      await api.delete(`/notifications/${notificationId}`);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      fetchUnreadCount();
-    } catch (err) {
-      console.error('Error deleting notification:', err);
+      await notificationsAPI.deleteNotification(notificationId);
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
     }
   };
 
-  const formatTime = (createdAt) => {
-    const date = new Date(createdAt);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    
-    return date.toLocaleDateString();
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'class_reminder':
+        return '🔔';
+      case 'enrollment_confirmation':
+        return '•';
+      default:
+        return 'ℹ️';
+    }
+  };
+
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'class_reminder':
+        return colors.gold;
+      case 'enrollment_confirmation':
+        return colors.emerald;
+      default:
+        return '#0078d4';
+    }
   };
 
   return (
     <div className="notification-center">
       <button
-        className="notification-bell"
-        onClick={() => setIsOpen(!isOpen)}
-        title="Notifications"
+        onClick={() => setShowPanel(!showPanel)}
+        className={`notification-center__bell ${unreadCount > 0 ? 'notification-center__bell--unread' : ''}`}
+        title={`${unreadCount} unread notifications`}
       >
         🔔
-        {unreadCount > 0 && <span className="badge-count">{unreadCount}</span>}
+        {unreadCount > 0 && <span className="notification-center__badge">{unreadCount}</span>}
       </button>
 
-      {isOpen && (
-        <div className="notification-dropdown">
-          <div className="notification-header">
+      {showPanel && (
+        <div className="notification-center__panel">
+          <div className="notification-center__header">
             <h3>Notifications</h3>
             {unreadCount > 0 && (
               <button
-                className="btn-small btn-secondary"
                 onClick={handleMarkAllAsRead}
+                className="notification-center__mark-all"
               >
-                Mark all as read
+                Mark All as Read
               </button>
             )}
           </div>
 
-          <div className="notification-list">
-            {loading ? (
-              <div className="notification-empty">Loading...</div>
-            ) : notifications.length === 0 ? (
-              <div className="notification-empty">No notifications</div>
-            ) : (
-              notifications.map(notif => (
+          {loading ? (
+            <div className="notification-center__loading">Loading...</div>
+          ) : notifications.length === 0 ? (
+            <div className="notification-center__empty">No notifications</div>
+          ) : (
+            <div className="notification-center__list">
+              {notifications.map(notification => (
                 <div
-                  key={notif.id}
-                  className={`notification-item ${notif.is_read ? 'read' : 'unread'}`}
+                  key={notification.id}
+                  className={`notification-center__item ${notification.is_read ? '' : 'notification-center__item--unread'}`}
+                  style={{ '--notification-accent': getNotificationColor(notification.notification_type) }}
                 >
-                  <div className="notification-content">
-                    <p className="notification-message">{notif.message}</p>
-                    {notif.class_title && (
-                      <span className="notification-class">{notif.class_title}</span>
-                    )}
-                    <span className="notification-time">
-                      {formatTime(notif.created_at)}
-                    </span>
+                  <div className="notification-center__content">
+                    <span className="notification-center__icon">{getNotificationIcon(notification.notification_type)}</span>
+                    <div className="notification-center__message-wrap">
+                      <p className="notification-center__message">{notification.message}</p>
+                      <span className="notification-center__timestamp">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="notification-actions">
-                    {!notif.is_read && (
+                  <div className="notification-center__actions">
+                    {!notification.is_read && (
                       <button
-                        className="btn-tiny"
-                        onClick={() => handleMarkAsRead(notif.id)}
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className="notification-center__action-btn"
                         title="Mark as read"
                       >
-                        ✓
+                        •
                       </button>
                     )}
                     <button
-                      className="btn-tiny btn-danger"
-                      onClick={() => handleDelete(notif.id)}
+                      onClick={() => handleDeleteNotification(notification.id)}
+                      className="notification-center__action-btn"
                       title="Delete"
                     >
                       ×
                     </button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

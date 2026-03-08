@@ -1,0 +1,451 @@
+/* Teacher Assignments Dashboard Styles */
+
+.teacher-assignments-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.assignments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.assignments-header h1 {
+  color: #0F3D3E;
+  font-size: 28px;
+  margin: 0;
+}
+
+/* Table Styles */
+.assignments-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.assignments-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.assignments-table thead {
+  background: #0F3D3E;
+  color: white;
+}
+
+.assignments-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.assignments-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.assignments-table tbody tr:hover {
+  background: #F5F7F6;
+}
+
+.assignment-description {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.submission-count {
+  display: inline-block;
+  background: #D4AF37;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.deadline-passed {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #27ae60;
+  color: white;
+}
+
+.status-closed {
+  background: #95a5a6;
+  color: white;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+}
+
+.btn-view {
+  color: #3498db;
+}
+
+.btn-view:hover {
+  background: #ebf5fb;
+}
+
+.btn-edit {
+  color: #f39c12;
+}
+
+.btn-edit:hover {
+  background: #fef5e7;
+}
+
+.btn-delete {
+  color: #e74c3c;
+}
+
+.btn-delete:hover {
+  background: #fadbd8;
+}
+
+/* Primary Button */
+.btn-primary {
+  background: #0F3D3E;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  background: #0a2a2b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 61, 62, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: white;
+  color: #0F3D3E;
+  border: 2px solid #0F3D3E;
+  padding: 10px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background: #0F3D3E;
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  color: #0F3D3E;
+  font-size: 18px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 2px solid #eee;
+  background: #F5F7F6;
+}
+
+.modal-header h2 {
+  color: #0F3D3E;
+  margin: 0;
+  font-size: 24px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #e74c3c;
+}
+
+/* Form Styles */
+.assignment-form {
+  padding: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: #0F3D3E;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #0F3D3E;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.file-info {
+  margin-top: 10px;
+  padding: 10px;
+  background: #F5F7F6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #0F3D3E;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #eee;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .assignments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .assignments-table {
+    font-size: 14px;
+  }
+  
+  .assignments-table th,
+  .assignments-table td {
+    padding: 10px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .assignment-form {
+    padding: 20px;
+  }
+
+    /** Enable table scrolling on tablet */
+    .assignments-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .assignments-table {
+      min-width: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-icon {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+  }
+
+    /** Mobile table scrolling */
+    .assignments-table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .assignments-table {
+      min-width: 450px;
+      font-size: 12px;
+    }
+
+    .assignments-table th,
+    .assignments-table td {
+      padding: 8px 6px;
+    }
+
+    .assignments-header h1 {
+      font-size: 1.3rem;
+    }
+
+    .assignments-header {
+      margin-bottom: 15px;
+    }
+
+    .modal-content {
+      width: 98%;
+      max-height: 95vh;
+    }
+  }
+
+  /** Extra small phones */
+  @media (max-width: 320px) {
+    .teacher-assignments-container {
+      padding: 10px;
+    }
+
+    .assignments-header h1 {
+      font-size: 1.1rem;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 10px 12px;
+    }
+
+    .assignments-table {
+      min-width: 380px;
+    }
+}

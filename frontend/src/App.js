@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './styles/theme.css';
+import { ThemeProvider } from './context/ThemeContext';
+import DashboardLayout from './components/DashboardLayout';
 import Login from './pages/Login';
+import VerifyOTP from './pages/VerifyOTP';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -9,6 +17,7 @@ import ManageStudents from './pages/admin/ManageStudents';
 import ManageClasses from './pages/admin/ManageClasses';
 import Reports from './pages/admin/Reports';
 import AdminAssignments from './pages/admin/Assignments';
+import MessageMonitor from './pages/admin/MessageMonitor';
 
 // Teacher Pages
 import TeacherDashboard from './pages/TeacherDashboard';
@@ -18,6 +27,7 @@ import Attendance from './pages/teacher/Attendance';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import StartClass from './pages/teacher/StartClass';
 import TeacherAssignments from './pages/teacher/Assignments';
+import TeacherSubmissions from './pages/teacher/Submissions';
 
 // Student Pages
 import StudentDashboard from './pages/StudentDashboard';
@@ -26,7 +36,9 @@ import StudentProfile from './pages/student/StudentProfile';
 import JoinClass from './pages/student/JoinClass';
 import StudentAssignments from './pages/student/Assignments';
 
-// Protected Route Component
+// Messages Pages
+import ChatLayout from './pages/messages/ChatLayout';
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -43,191 +55,114 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 function App() {
+  // Fetch CSRF token on app initialization
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await fetch('/api/csrf-token', {
+          method: 'GET',
+          credentials: 'include' // Include cookies
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.token) {
+            localStorage.setItem('csrf-token', data.token);
+            console.log('✅ CSRF token fetched and stored');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+    };
+    
+    fetchCsrfToken();
+  }, []); // Run once on app mount
+
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/teachers"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ManageTeachers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/manage-teachers"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ManageTeachers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/students"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ManageStudents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/manage-students"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ManageStudents />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/classes"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ManageClasses />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/create-class"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <CreateClass />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/reports"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Reports />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/assignments"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminAssignments />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="teachers" element={<ManageTeachers />} />
+            <Route path="manage-teachers" element={<ManageTeachers />} />
+            <Route path="students" element={<ManageStudents />} />
+            <Route path="manage-students" element={<ManageStudents />} />
+            <Route path="classes" element={<ManageClasses />} />
+            <Route path="manage-classes" element={<ManageClasses />} />
+            <Route path="create-class" element={<CreateClass />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="assignments" element={<AdminAssignments />} />
+            <Route path="messages" element={<MessageMonitor />} />
+            <Route path="message-monitor" element={<MessageMonitor />} />
+          </Route>
 
-        {/* Teacher Routes */}
-        <Route
-          path="/teacher"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <TeacherDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/create-class"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <CreateClass />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/my-classes"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <MyClasses />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/attendance/:classId"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <Attendance />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/profile"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <TeacherProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/start-class/:classId"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <StartClass />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/assignments"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <TeacherAssignments />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<TeacherDashboard />} />
+            <Route path="create-class" element={<CreateClass />} />
+            <Route path="my-classes" element={<MyClasses />} />
+            <Route path="attendance/:classId" element={<Attendance />} />
+            <Route path="profile" element={<TeacherProfile />} />
+            <Route path="start-class/:classId" element={<StartClass />} />
+            <Route path="assignments" element={<TeacherAssignments />} />
+            <Route path="submissions/:assignmentId" element={<TeacherSubmissions />} />
+            <Route path="messages" element={<ChatLayout />} />
+          </Route>
 
-        {/* Student Routes */}
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/classes"
-          element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentClasses />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/join-class/:classId"
-          element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <JoinClass />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/profile"
-          element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/assignments"
-          element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentAssignments />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<StudentDashboard />} />
+            <Route path="classes" element={<StudentClasses />} />
+            <Route path="join-class/:classId" element={<JoinClass />} />
+            <Route path="profile" element={<StudentProfile />} />
+            <Route path="assignments" element={<StudentAssignments />} />
+            <Route path="messages" element={<ChatLayout />} />
+          </Route>
 
-        {/* Catch all - redirect to login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+    </ThemeProvider>
   );
 }
 

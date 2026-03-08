@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../api/api';
 import { colors } from '../styles/colors';
 import '../styles/dashboard.css';
@@ -20,23 +20,35 @@ const Login = () => {
     try {
       const response = await authAPI.login(formData);
       
-      // Store token and user info
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Check if 2FA OTP is required
+      if (response.data.requireOTP) {
+        // Store email for OTP verification page
+        localStorage.setItem('pendingOTPEmail', formData.email);
+        setMessage({ type: 'success', text: 'OTP sent to your email. Redirecting to verification...' });
+        
+        // Redirect to OTP verification page
+        setTimeout(() => {
+          navigate('/verify-otp', { state: { email: formData.email } });
+        }, 500);
+      } else {
+        // No 2FA, proceed with normal login
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
+        setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
 
-      // Redirect based on role
-      setTimeout(() => {
-        const role = response.data.user.role;
-        if (role === 'admin') {
-          navigate('/admin');
-        } else if (role === 'teacher') {
-          navigate('/teacher');
-        } else if (role === 'student') {
-          navigate('/student');
-        }
-      }, 1000);
+        // Redirect based on role
+        setTimeout(() => {
+          const role = response.data.user.role;
+          if (role === 'admin') {
+            navigate('/admin');
+          } else if (role === 'teacher') {
+            navigate('/teacher');
+          } else if (role === 'student') {
+            navigate('/student');
+          }
+        }, 1000);
+      }
     } catch (error) {
       setMessage({ 
         type: 'error', 
@@ -94,6 +106,12 @@ const Login = () => {
             />
           </div>
 
+          <div style={styles.forgotPasswordContainer}>
+            <Link to="/forgot-password" style={styles.forgotPasswordLink}>
+              Forgot Password?
+            </Link>
+          </div>
+
           <button 
             type="submit" 
             className="btn btn-primary" 
@@ -103,13 +121,6 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        <div style={styles.demoCredentials}>
-          <h4>Demo Credentials:</h4>
-          <p><strong>Admin:</strong> admin@alburhan.com / admin123</p>
-          <p><strong>Teacher:</strong> Create via admin panel</p>
-          <p><strong>Student:</strong> Create via admin panel</p>
-        </div>
       </div>
     </div>
   );
@@ -120,16 +131,20 @@ const styles = {
     color: colors.primary,
     marginTop: '5px'
   },
+  forgotPasswordContainer: {
+    textAlign: 'right',
+    marginTop: '10px',
+    marginBottom: '5px'
+  },
+  forgotPasswordLink: {
+    color: colors.primary,
+    textDecoration: 'none',
+    fontSize: '0.9rem',
+    fontWeight: '500'
+  },
   loginButton: {
     width: '100%',
     marginTop: '10px'
-  },
-  demoCredentials: {
-    marginTop: '30px',
-    padding: '15px',
-    backgroundColor: colors.background,
-    borderRadius: '8px',
-    fontSize: '0.9rem'
   }
 };
 

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import ClassCard from '../../components/ClassCard';
 import { studentAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
@@ -33,11 +31,7 @@ const StudentClasses = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <h1 style={styles.pageTitle}>My Classes</h1>
 
           {message.text && (
@@ -55,11 +49,11 @@ const StudentClasses = () => {
           ) : (
             <>
               <div style={styles.infoBox}>
-                <h3>ℹ️ How to Join a Class</h3>
+                <h3>How to Join a Class</h3>
                 <p>1. Click the "Join Class" button on any class card</p>
                 <p>2. Your attendance will be automatically marked</p>
                 <p>3. You will be redirected to the Jitsi meeting room</p>
-                <p>4. <strong>⚠️ Please wait for your teacher to start the class first</strong></p>
+                <p>4. <strong>Please wait for your teacher to start the class first</strong></p>
                 <p>5. Make sure your camera and microphone are ready!</p>
               </div>
 
@@ -76,8 +70,6 @@ const StudentClasses = () => {
             </>
           )}
         </div>
-      </div>
-    </div>
   );
 };
 

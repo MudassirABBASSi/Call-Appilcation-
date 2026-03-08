@@ -1,223 +1,273 @@
 const Submission = require('../models/Submission');
 const Assignment = require('../models/Assignment');
-const AssignmentStudent = require('../models/AssignmentStudent');
+const Notification = require('../models/Notification');
 
-// STUDENT CONTROLLERS
-exports.submitAssignment = async (req, res) => {
+const submissionController = {
+  // Submit assignment (Student only)
+  submitAssignment: async (req, res) => {
     try {
-        const student_id = req.user.id;
-        const assignment_id = req.params.id;
+      const { assignment_id, file_url } = req.body;
+      const student_id = req.user.id;
+      const student_name = req.user.name;
 
-        // Validation
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
-        }
+      if (!assignment_id) {
+        return res.status(400).json({ message: 'Assignment ID is required' });
+      }
 
-        // Verify student is assigned to this assignment
-        const isAssigned = await AssignmentStudent.isStudentAssigned(assignment_id, student_id);
-        if (!isAssigned) {
-            return res.status(403).json({ message: 'You are not assigned to this assignment' });
-        }
+      // First, check if the assignment exists and get its details
+      const assignment = await Assignment.findById(assignment_id);
+      
+      if (!assignment) {
+        return res.status(404).json({ message: 'Assignment not found' });
+      }
 
-        // Get assignment details
-        const assignment = await Assignment.findById(assignment_id);
-        if (!assignment) {
-            return res.status(404).json({ message: 'Assignment not found' });
-        }
-
-        // Check if deadline passed
-        const isDeadlinePassed = new Date() > new Date(assignment.deadline);
-        const status = isDeadlinePassed ? 'late' : 'submitted';
-
-        // Create or update submission
-        const file_url = `/uploads/submissions/${req.file.filename}`;
+      // Check if the deadline has passed
+      if (assignment.deadline) {
+        const deadline = new Date(assignment.deadline);
+        const now = new Date();
         
-        const result = await Submission.create({
-            assignment_id,
-            student_id,
-            file_url,
-            status
-        });
+        if (now > deadline) {
+          return res.status(400).json({ 
+            message: 'Cannot submit assignment after the deadline has passed',
+            deadline: deadline 
+          });
+        }
+      }
 
-        const submission = await Submission.findByAssignmentAndStudent(assignment_id, student_id);
-
-        res.status(201).json({
-            message: 'Assignment submitted successfully',
-            submission
+      // Check for duplicate submission
+      const existingSubmission = await Submission.findByAssignmentAndStudent(assignment_id, student_id);
+      
+      if (existingSubmission) {
+        return res.status(400).json({ 
+          message: 'You have already submitted this assignment',
+          submission: existingSubmission
         });
-    } catch (error) {
-        console.error('Error submitting assignment:', error);
-        res.status(500).json({ message: 'Error submitting assignment', error: error.message });
+      }
+
+      // Create the submission
+      const submissionData = {
+        assignment_id,
+        student_id,
+        file_url: file_url || null,
+        status: 'submitted'
+      };
+
+      const submissionId = await Submission.create(submissionData);
+
+      // Notify the teacher
+      const notificationData = {
+        user_id: assignment.teacher_id,
+        assignment_id: assignment_id,
+        message: `Student ${student_name} submitted assignment "${assignment.title}"`,
+        notification_type: 'assignment_submitted'
+      };
+
+      Notification.create(notificationData, (notifErr) => {
+        if (notifErr) {
+          console.error('Error creating notification:', notifErr);
+        } else {
+          console.log(`✅ Notified teacher ${assignment.teacher_id} of submission`);
+        }
+      });
+
+      res.status(201).json({ 
+        message: 'Assignment submitted successfully', 
+        submission: { id: submissionId, ...submissionData, submitted_at: new Date() } 
+      });
+    } catch (err) {
+      console.error('Error submitting assignment:', err);
+      res.status(500).json({ message: 'Error submitting assignment', error: err.message });
     }
-};
+  },
 
-exports.getStudentSubmission = async (req, res) => {
+  // Get submission by ID
+  getSubmissionById: async (req, res) => {
     try {
-        const student_id = req.user.id;
-        const assignment_id = req.params.id;
+      const { id } = req.params;
+      const userId = req.user.id;
+      const userRole = req.user.role;
 
-        // Verify student is assigned to this assignment
-        const isAssigned = await AssignmentStudent.isStudentAssigned(assignment_id, student_id);
-        if (!isAssigned) {
-            return res.status(403).json({ message: 'You are not assigned to this assignment' });
-        }
+      const submission = await Submission.findById(id);
+      
+      if (!submission) {
+        return res.status(404).json({ message: 'Submission not found' });
+      }
 
-        const submission = await Submission.findByAssignmentAndStudent(assignment_id, student_id);
+      // Check authorization: students can only see own submissions
+      if (userRole === 'student' && submission.student_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to view this submission' });
+      }
 
-        res.status(200).json({
-            submission
-        });
-    } catch (error) {
-        console.error('Error fetching submission:', error);
-        res.status(500).json({ message: 'Error fetching submission', error: error.message });
+      res.json({ submission });
+    } catch (err) {
+      console.error('Error retrieving submission:', err);
+      res.status(500).json({ message: 'Error retrieving submission', error: err.message });
     }
-};
+  },
 
-// TEACHER CONTROLLERS
-exports.getAssignmentSubmissions = async (req, res) => {
+  // Get submissions for an assignment (Teacher only)
+  getSubmissionsByAssignment: async (req, res) => {
     try {
-        const teacher_id = req.user.id;
-        const assignment_id = req.params.id;
+      const { assignmentId } = req.params;
+      const userId = req.user.id;
 
-        // Verify teacher owns this assignment
-        const assignment = await Assignment.findById(assignment_id);
-        if (!assignment) {
-            return res.status(404).json({ message: 'Assignment not found' });
-        }
+      // Ensure assignment exists and belongs to the logged-in teacher.
+      const assignment = await Assignment.findById(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: 'Assignment not found' });
+      }
 
-        if (assignment.teacher_id !== teacher_id) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-
-        // Get submissions for this assignment
-        const submissions = await Submission.findByAssignment(assignment_id);
-
-        // Get submission stats
-        const stats = await Submission.getSubmissionStats(assignment_id);
-
-        res.status(200).json({
-            submissions,
-            stats
-        });
-    } catch (error) {
-        console.error('Error fetching submissions:', error);
-        res.status(500).json({ message: 'Error fetching submissions', error: error.message });
+      if (assignment.teacher_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to view these submissions' });
+      }
+      
+      // Get all students enrolled in the assignment's class with their submission status
+      const query = `
+        SELECT 
+          u.id as student_id,
+          u.name as student_name,
+          u.email as student_email,
+          s.id as submission_id,
+          s.id as id,
+          s.file_url,
+          s.submitted_at,
+          s.marks,
+          s.feedback,
+          CASE
+            WHEN s.id IS NULL THEN 'pending'
+            ELSE s.status
+          END as status
+        FROM class_students cs
+        JOIN users u ON cs.student_id = u.id
+        JOIN assignments a ON cs.class_id = a.class_id
+        LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = u.id
+        WHERE a.id = ? AND u.role = 'student'
+        ORDER BY u.name ASC
+      `;
+      
+      const db = require('../config/db');
+      
+      // Use promise-based query with connection pool
+      const [submissions] = await db.promise().query(query, [assignmentId]);
+      
+      if (!submissions || submissions.length === 0) {
+        console.log(`ℹ️  No students enrolled for assignment ${assignmentId}`);
+        return res.json({ submissions: [] });
+      }
+      
+      console.log(`✅ Retrieved ${submissions.length} student records for assignment ${assignmentId}`);
+      res.json({ submissions: submissions || [] });
+    } catch (err) {
+      console.error('❌ Error retrieving submissions:', err);
+      res.status(500).json({ message: 'Error retrieving submissions', error: err.message });
     }
-};
+  },
 
-exports.gradeSubmission = async (req, res) => {
+  // Get submissions by student
+  getSubmissionsByStudent: async (req, res) => {
     try {
-        const teacher_id = req.user.id;
-        const submission_id = req.params.id;
-        const { marks, feedback } = req.body;
+      const userId = req.user.id;
+      const userRole = req.user.role;
 
-        // Validation
-        if (marks === undefined || marks === null) {
-            return res.status(400).json({ message: 'Marks are required' });
-        }
+      let studentId = userId;
+      
+      // Admin can view any student's submissions
+      if (userRole === 'admin' && req.params.studentId) {
+        studentId = req.params.studentId;
+      } else if (userRole !== 'student' && userRole !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized to view student submissions' });
+      }
 
-        // Get submission
-        const submission = await Submission.findById(submission_id);
-        if (!submission) {
-            return res.status(404).json({ message: 'Submission not found' });
-        }
-
-        // Get assignment to verify teacher ownership
-        const assignment = await Assignment.findById(submission.assignment_id);
-        if (assignment.teacher_id !== teacher_id) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-
-        // Validate marks not exceeding total marks
-        if (marks > assignment.total_marks) {
-            return res.status(400).json({ 
-                message: `Marks cannot exceed total marks (${assignment.total_marks})` 
-            });
-        }
-
-        if (marks < 0) {
-            return res.status(400).json({ message: 'Marks cannot be negative' });
-        }
-
-        // Update submission with grades
-        await Submission.updateGrade(submission_id, marks, feedback || null);
-
-        const updatedSubmission = await Submission.findById(submission_id);
-
-        res.status(200).json({
-            message: 'Submission graded successfully',
-            submission: updatedSubmission
-        });
-    } catch (error) {
-        console.error('Error grading submission:', error);
-        res.status(500).json({ message: 'Error grading submission', error: error.message });
+      const submissions = await Submission.findByStudent(studentId);
+      res.json({ submissions });
+    } catch (err) {
+      console.error('Error retrieving submissions:', err);
+      res.status(500).json({ message: 'Error retrieving submissions', error: err.message });
     }
-};
+  },
 
-exports.getSubmissionDetail = async (req, res) => {
+  // Grade submission (Teacher only)
+  gradeSubmission: async (req, res) => {
     try {
-        const teacher_id = req.user.id;
-        const submission_id = req.params.id;
+      const { submissionId } = req.params;
+      const { marks_obtained, feedback } = req.body;
+      const userId = req.user.id;
+      const userRole = req.user.role;
 
-        // Get submission
-        const submission = await Submission.findById(submission_id);
-        if (!submission) {
-            return res.status(404).json({ message: 'Submission not found' });
-        }
+      if (marks_obtained === undefined) {
+        return res.status(400).json({ message: 'Marks obtained is required' });
+      }
 
-        // Get assignment to verify teacher ownership
-        const assignment = await Assignment.findById(submission.assignment_id);
-        if (assignment.teacher_id !== teacher_id) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
+      const submission = await Submission.findById(submissionId);
+      
+      if (!submission) {
+        return res.status(404).json({ message: 'Submission not found' });
+      }
 
-        res.status(200).json({
-            submission,
-            assignment
+      // For authorization, we need to get the assignment to check the teacher
+      const assignment = await Assignment.findById(submission.assignment_id);
+      
+      if (!assignment) {
+        return res.status(404).json({ message: 'Assignment not found' });
+      }
+
+      // Verify teacher owns the assignment
+      if (userRole !== 'admin' && assignment.teacher_id !== userId) {
+        return res.status(403).json({ message: 'Not authorized to grade this submission' });
+      }
+
+      // Validate marks don't exceed total marks
+      if (assignment.total_marks && marks_obtained > assignment.total_marks) {
+        return res.status(400).json({ 
+          message: `Marks obtained cannot exceed total marks (${assignment.total_marks})` 
         });
-    } catch (error) {
-        console.error('Error fetching submission detail:', error);
-        res.status(500).json({ message: 'Error fetching submission detail', error: error.message });
-    }
-};
+      }
 
-// ADMIN CONTROLLERS
-exports.getAllSubmissions = async (req, res) => {
+      // Update the grade
+      await Submission.updateGrade(submissionId, marks_obtained, feedback || '');
+
+      // STEP 5: Notify the student with duplicate prevention
+      try {
+        const notificationHelper = require('../utils/notificationHelper');
+        
+        const notificationResult = await notificationHelper.createNotification({
+          user_id: submission.student_id,
+          assignment_id: submission.assignment_id,
+          submission_id: submissionId, // Add submission_id for duplicate prevention
+          message: `Your assignment "${assignment.title}" has been graded. Score: ${marks_obtained}/${assignment.total_marks}`,
+          notification_type: 'assignment_graded'
+        });
+
+        if (notificationResult.duplicate_prevented) {
+          console.log(`ℹ️  Grading notification already exists for submission ${submissionId}`);
+        } else {
+          console.log(`✅ Notified student ${submission.student_id} of grading`);
+        }
+      } catch (notifErr) {
+        // Log error but don't fail the grading operation
+        console.error('⚠️  Error creating grading notification:', notifErr.message);
+      }
+
+      res.json({ 
+        message: 'Submission graded successfully', 
+        submission: { id: submissionId, marks_obtained, feedback, graded: true } 
+      });
+    } catch (err) {
+      console.error('Error grading submission:', err);
+      res.status(500).json({ message: 'Error grading submission', error: err.message });
+    }
+  },
+
+  // Get all submissions (Admin only)
+  getAllSubmissions: async (req, res) => {
     try {
-        const { class_id, teacher_id, student_id, status } = req.query;
-
-        const filters = {};
-        if (class_id) filters.class_id = class_id;
-        if (teacher_id) filters.teacher_id = teacher_id;
-        if (student_id) filters.student_id = student_id;
-        if (status) filters.status = status;
-
-        const submissions = await Submission.findAll(filters);
-
-        res.status(200).json({
-            submissions
-        });
-    } catch (error) {
-        console.error('Error fetching submissions:', error);
-        res.status(500).json({ message: 'Error fetching submissions', error: error.message });
+      const submissions = await Submission.findAll();
+      res.json({ submissions });
+    } catch (err) {
+      console.error('Error retrieving all submissions:', err);
+      res.status(500).json({ message: 'Error retrieving submissions', error: err.message });
     }
+  }
 };
 
-exports.getSubmissionStats = async (req, res) => {
-    try {
-        const { assignment_id } = req.query;
-
-        if (!assignment_id) {
-            return res.status(400).json({ message: 'assignment_id is required' });
-        }
-
-        const stats = await Submission.getSubmissionStats(assignment_id);
-
-        res.status(200).json({
-            stats
-        });
-    } catch (error) {
-        console.error('Error fetching submission stats:', error);
-        res.status(500).json({ message: 'Error fetching submission stats', error: error.message });
-    }
-};
+module.exports = submissionController;

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { teacherAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -39,11 +37,7 @@ const Attendance = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>Class Attendance</h1>
             <button
@@ -72,7 +66,6 @@ const Attendance = () => {
                   <tr>
                     <th>ID</th>
                     <th>Student Name</th>
-                    <th>Email</th>
                     <th>Joined At</th>
                   </tr>
                 </thead>
@@ -81,8 +74,7 @@ const Attendance = () => {
                     <tr key={record.id}>
                       <td>{record.id}</td>
                       <td>{record.student_name}</td>
-                      <td>{record.student_email}</td>
-                      <td>{formatDateTime(record.joined_at)}</td>
+                      <td>{record.join_time ? formatDateTime(record.join_time) : 'N/A'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -90,8 +82,6 @@ const Attendance = () => {
             )}
           </div>
         </div>
-      </div>
-    </div>
   );
 };
 

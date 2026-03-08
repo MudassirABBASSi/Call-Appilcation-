@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import ClassCard from '../../components/ClassCard';
 import { teacherAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
@@ -36,26 +34,16 @@ const MyClasses = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <div style={styles.header}>
             <h1 style={styles.pageTitle}>My Classes</h1>
-            <button
-              onClick={() => navigate('/teacher/create-class')}
-              className="btn btn-primary"
-            >
-              Create New Class
-            </button>
           </div>
 
           {loading ? (
             <p>Loading...</p>
           ) : classes.length === 0 ? (
             <div className="table-container">
-              <p>No classes found. Create your first class!</p>
+              <p>No classes assigned yet. Check back regularly for new classes.</p>
             </div>
           ) : (
             <div className="classes-grid">
@@ -71,16 +59,11 @@ const MyClasses = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
   );
 };
 
 const styles = {
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: '30px'
   },
   pageTitle: {

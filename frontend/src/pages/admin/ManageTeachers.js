@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import TeacherModal from '../../components/TeacherModal';
 import { adminAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
@@ -11,6 +9,7 @@ const ManageTeachers = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [deletingTeacherId, setDeletingTeacherId] = useState(null);
 
   useEffect(() => {
     fetchTeachers();
@@ -42,24 +41,27 @@ const ManageTeachers = () => {
   };
 
   const handleDelete = async (id) => {
+    if (deletingTeacherId !== null) return;
+
     if (window.confirm('Are you sure you want to delete this teacher?')) {
       try {
+        setDeletingTeacherId(id);
         await adminAPI.deleteTeacher(id);
         setMessage({ type: 'success', text: 'Teacher deleted successfully!' });
         fetchTeachers();
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } catch (error) {
-        setMessage({ type: 'error', text: 'Error deleting teacher' });
+        const errorMessage = error.response?.data?.message || 'Error deleting teacher';
+        setMessage({ type: 'error', text: errorMessage });
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+      } finally {
+        setDeletingTeacherId(null);
       }
     }
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <div className="page-header">
             <h1>Manage Teachers</h1>
             <div className="page-header-actions">
@@ -109,8 +111,9 @@ const ManageTeachers = () => {
                       <button
                         onClick={() => handleDelete(teacher.id)}
                         className="btn btn-danger"
+                        disabled={deletingTeacherId === teacher.id}
                       >
-                        Delete
+                        {deletingTeacherId === teacher.id ? 'Deleting...' : 'Delete'}
                       </button>
                     </td>
                   </tr>
@@ -125,8 +128,6 @@ const ManageTeachers = () => {
             teacher={selectedTeacher}
           />
         </div>
-      </div>
-    </div>
   );
 };
 

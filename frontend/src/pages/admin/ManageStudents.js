@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import StudentModal from '../../components/StudentModal';
 import { adminAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
@@ -11,6 +9,7 @@ const ManageStudents = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [deletingStudentId, setDeletingStudentId] = useState(null);
 
   useEffect(() => {
     fetchStudents();
@@ -42,24 +41,27 @@ const ManageStudents = () => {
   };
 
   const handleDelete = async (id) => {
+    if (deletingStudentId !== null) return;
+
     if (window.confirm('Are you sure you want to delete this student?')) {
       try {
+        setDeletingStudentId(id);
         await adminAPI.deleteStudent(id);
         setMessage({ type: 'success', text: 'Student deleted successfully!' });
         fetchStudents();
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } catch (error) {
-        setMessage({ type: 'error', text: 'Error deleting student' });
+        const errorMessage = error.response?.data?.message || 'Error deleting student';
+        setMessage({ type: 'error', text: errorMessage });
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+      } finally {
+        setDeletingStudentId(null);
       }
     }
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <div className="page-header">
             <h1>Manage Students</h1>
             <div className="page-header-actions">
@@ -102,7 +104,15 @@ const ManageStudents = () => {
                     <td>{student.email}</td>
                     <td>{student.phone || '-'}</td>
                     <td><span style={{backgroundColor: '#D4AF37', padding: '3px 8px', borderRadius: '3px', fontSize: '0.85rem'}}>{student.course_name || '-'}</span></td>
-                    <td>{student.teacher_id ? 'Assigned' : 'Not Assigned'}</td>
+                    <td>
+                      {student.teacher_name ? (
+                        <span style={{backgroundColor: '#0F3D3E', color: '#D4AF37', padding: '4px 10px', borderRadius: '4px', fontSize: '0.85rem', fontWeight: '600'}}>
+                          {student.teacher_name}
+                        </span>
+                      ) : (
+                        <span style={{color: '#999', fontStyle: 'italic'}}>Not Assigned</span>
+                      )}
+                    </td>
                     <td>{new Date(student.created_at).toLocaleDateString()}</td>
                     <td>
                       <button
@@ -115,8 +125,9 @@ const ManageStudents = () => {
                       <button
                         onClick={() => handleDelete(student.id)}
                         className="btn btn-danger"
+                        disabled={deletingStudentId === student.id}
                       >
-                        Delete
+                        {deletingStudentId === student.id ? 'Deleting...' : 'Delete'}
                       </button>
                     </td>
                   </tr>
@@ -131,8 +142,6 @@ const ManageStudents = () => {
             student={selectedStudent}
           />
         </div>
-      </div>
-    </div>
   );
 };
 

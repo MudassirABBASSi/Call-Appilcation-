@@ -1,20 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('../controllers/notificationController');
-const authMiddleware = require('../middleware/authMiddleware');
-const { checkRole } = require('../middleware/authMiddleware');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
-// Middleware
+// All notification routes require authentication
 router.use(authMiddleware);
 
-// ===================== USER NOTIFICATIONS =====================
+// GET routes
 router.get('/', notificationController.getUserNotifications);
-router.get('/unread/count', notificationController.getUnreadCount);
-router.put('/:id/read', notificationController.markAsRead);
-router.put('/read-all', notificationController.markAllAsRead);
-router.delete('/:id', notificationController.deleteNotification);
+router.get('/unread', notificationController.getUnreadNotifications);
+router.get('/count', notificationController.getUnreadCount);
 
-// ===================== ADMIN ROUTES =====================
-router.post('/admin/notify-class/:classId', checkRole('admin'), notificationController.notifyClass);
+// PATCH/PUT routes (STEP 7: Support both PUT and PATCH)
+router.patch('/:notificationId/read', notificationController.markAsRead);
+router.put('/:notificationId/read', notificationController.markAsRead);
+router.patch('/read-all', notificationController.markAllAsRead);
+router.put('/read-all', notificationController.markAllAsRead);
+
+// DELETE routes
+router.delete('/:notificationId', notificationController.deleteNotification);
 
 module.exports = router;

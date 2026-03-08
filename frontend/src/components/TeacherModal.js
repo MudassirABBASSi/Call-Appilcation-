@@ -79,7 +79,7 @@ const TeacherModal = ({ isOpen, onClose, onSave, teacher = null }) => {
             style={styles.closeBtn}
             disabled={loading}
           >
-            ✕
+            ×
           </button>
         </div>
 

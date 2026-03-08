@@ -664,6 +664,34 @@
 
 .assignments-section h2,
 .submissions-section h2 {
+    font-size: 1.2rem;
+    margin: 0 0 15px 0;
+}
+
+/* Student Assignments Page */
+.student-assignments-container {
+    min-height: 100vh;
+    background: #f5f5f5;
+}
+
+.assignments-header {
+    background: white;
+    padding: 30px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.assignments-header h1 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.assignments-header .subtitle {
+    margin: 0;
+    color: #666;
+    font-size: 1rem;
+}
+.submissions-section h2 {
     margin-top: 0;
     color: #333;
 }

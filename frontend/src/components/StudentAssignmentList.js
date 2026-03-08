@@ -115,7 +115,7 @@ const StudentAssignmentList = ({ onSubmit, onRefresh }) => {
                                 <div className={`deadline-info ${getTimeRemaining(assignment.deadline).class}`}>
                                     <strong>Deadline:</strong> {formatDate(assignment.deadline)}
                                     <div className="time-remaining-text">
-                                        ⏱️ {getTimeRemaining(assignment.deadline).text}
+                                        {getTimeRemaining(assignment.deadline).text}
                                     </div>
                                 </div>
 

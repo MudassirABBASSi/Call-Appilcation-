@@ -1,6 +1,4 @@
 import React from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { colors } from '../../styles/colors';
 import '../../styles/dashboard.css';
 
@@ -8,11 +6,7 @@ const StudentProfile = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <h1 style={styles.pageTitle}>My Profile</h1>
 
           <div className="form-container">
@@ -40,8 +34,6 @@ const StudentProfile = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
   );
 };
 

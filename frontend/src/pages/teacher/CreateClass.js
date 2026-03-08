@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { teacherAPI } from '../../api/api';
 import { colors } from '../../styles/colors';
 import { useNavigate } from 'react-router-dom';
@@ -49,11 +47,7 @@ const CreateClass = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <Navbar />
-      <Sidebar />
-      <div className="main-content">
-        <div className="content-wrapper">
+          <div className="content-wrapper">
           <h1 style={styles.pageTitle}>Create New Class</h1>
 
           {message.text && (
@@ -124,8 +118,6 @@ const CreateClass = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
   );
 };
 

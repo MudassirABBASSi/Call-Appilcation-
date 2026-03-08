@@ -1,0 +1,423 @@
+/* ============================================
+   MESSAGE MONITOR - MAIN LAYOUT
+   Clean Flexbox Structure
+   ============================================ */
+
+.message-monitor {
+  display: flex;
+  height: calc(100vh - 200px);
+  background: #f5f6f8;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* LEFT PANEL - Conversation List (30%) */
+.conversation-panel {
+  width: 30%;
+  height: 100%;
+  border-right: 1px solid #ddd;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  overflow: hidden;
+}
+
+/* RIGHT PANEL - Chat Window (70%) */
+.chat-panel {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  background: #f2f2f2;
+  overflow: hidden;
+}
+
+/* ============================================
+   CHAT HEADER - Fixed at top
+   ============================================ */
+
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #ddd;
+  background: white;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-header-avatars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+}
+
+.chat-header-avatar.teacher {
+  background: linear-gradient(135deg, #0f3d3e 0%, #1a5557 100%);
+}
+
+.chat-header-avatar.student {
+  background: linear-gradient(135deg, #d4af37 0%, #c9a430 100%);
+}
+
+.chat-header-arrow {
+  font-size: 14px;
+  color: #0f3d3e;
+  font-weight: 700;
+}
+
+.chat-header-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chat-header-teacher-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f3d3e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-header-student-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #d4af37;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-header-date {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}
+
+.chat-header-badge {
+  background-color: #e8f5f6;
+  color: #0f3d3e;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   CHAT BODY - Scrollable Messages Area
+   ============================================ */
+
+.chat-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  text-align: center;
+}
+
+.chat-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.chat-empty-text {
+  font-size: 16px;
+  color: #666;
+}
+
+/* ============================================
+   MESSAGE GROUPS & STYLING
+   ============================================ */
+
+.message-date-divider {
+  text-align: center;
+  padding: 12px 0;
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.message-wrapper {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.message-wrapper.teacher {
+  justify-content: flex-end;
+}
+
+.message-wrapper.student {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 55%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  word-wrap: break-word;
+}
+
+.message-wrapper.teacher .message-bubble {
+  background-color: #0f3d3e;
+  color: white;
+}
+
+.message-wrapper.student .message-bubble {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #eee;
+}
+
+.message-sender {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+.message-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.message-time {
+  white-space: nowrap;
+}
+
+.read-status {
+  font-weight: 700;
+}
+
+/* ============================================
+   CHAT PAGINATION
+   ============================================ */
+
+.chat-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.chat-pagination button {
+  padding: 6px 12px;
+  background-color: #0f3d3e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.chat-pagination button:hover:not(:disabled) {
+  background-color: #1a5557;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chat-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-pagination-info {
+  font-size: 11px;
+  color: #666;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .message-monitor {
+    flex-direction: row;
+    height: calc(100vh - 170px);
+  }
+
+  .conversation-panel {
+    width: 35%;
+    min-width: 0;
+    max-height: 100%;
+    border-right: 1px solid #ddd;
+    border-bottom: none;
+  }
+
+  .chat-panel {
+    width: 65%;
+    flex: 1;
+  }
+
+  .message-bubble {
+    max-width: 75%;
+  }
+}
+
+@media (max-width: 768px) {
+  .message-monitor {
+    height: auto;
+    flex-direction: row;
+    gap: 0;
+    min-height: calc(100vh - 300px);
+  }
+
+  .conversation-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    max-height: none;
+    border-right: none;
+    border-bottom: none;
+    overflow-y: auto;
+  }
+
+  .chat-panel {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+    min-height: calc(100vh - 300px);
+    overflow: hidden;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .chat-body {
+    padding: 16px;
+  }
+
+  /* Ensure messages display properly on mobile */
+  .message-wrapper.teacher .message-bubble,
+  .message-wrapper.student .message-bubble {
+    max-width: 90%;
+  }
+}
+
+/** Mobile phones - extra small screens */
+@media (max-width: 480px) {
+  .message-monitor {
+    min-height: calc(100vh - 250px);
+  }
+
+  .chat-panel {
+    min-height: calc(100vh - 250px);
+  }
+
+  .message-bubble {
+    max-width: 90%;
+  }
+
+  .chat-header {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+
+  .chat-header-info {
+    flex-wrap: wrap;
+  }
+
+  .chat-body {
+    padding: 12px;
+  }
+
+  .chat-pagination {
+    padding: 8px 0;
+    gap: 8px;
+  }
+
+  .chat-pagination button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.conversation-panel::-webkit-scrollbar,
+.chat-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversation-panel::-webkit-scrollbar-track,
+.chat-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversation-panel::-webkit-scrollbar-thumb,
+.chat-body::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.conversation-panel::-webkit-scrollbar-thumb:hover,
+.chat-body::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

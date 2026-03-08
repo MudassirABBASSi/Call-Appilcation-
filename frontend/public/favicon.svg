@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Alburhan Classroom">
+  <rect width="64" height="64" rx="12" fill="#0F3D3E"/>
+  <path d="M12 24L32 14L52 24L32 34L12 24Z" fill="#CBE4DE"/>
+  <path d="M18 30V42L32 50L46 42V30L32 38L18 30Z" fill="#2C7A7B"/>
+</svg>

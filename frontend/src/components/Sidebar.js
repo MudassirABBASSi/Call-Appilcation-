@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { colors } from '../styles/colors';
+import '../styles/sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const role = user.role;
+
+  // Close sidebar on route change for mobile - only when pathname actually changes
+  useEffect(() => {
+    if (window.innerWidth <= 992 && onClose) {
+      onClose();
+    }
+  // Only run when location pathname changes, not on mount or onClose change
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getMenuItems = () => {
     switch (role) {
@@ -15,22 +23,24 @@ const Sidebar = () => {
           { path: '/admin/teachers', label: 'Manage Teachers', icon: '👨‍🏫' },
           { path: '/admin/students', label: 'Manage Students', icon: '👨‍🎓' },
           { path: '/admin/classes', label: 'Manage Classes', icon: '📚' },
-          { path: '/admin/assignments', label: 'Assignment Management', icon: '📝' },
+          { path: '/admin/assignments', label: 'Assignment Management', icon: '�' },
+          { path: '/admin/messages', label: 'Message Monitor', icon: '💬' },
           { path: '/admin/reports', label: 'Reports', icon: '📈' }
         ];
       case 'teacher':
         return [
           { path: '/teacher', label: 'Dashboard', icon: '📊' },
-          { path: '/teacher/create-class', label: 'Create Class', icon: '➕' },
           { path: '/teacher/my-classes', label: 'My Classes', icon: '📚' },
-          { path: '/teacher/assignments', label: 'Assignments', icon: '📝' },
+          { path: '/teacher/assignments', label: 'Assignments', icon: '�' },
+          { path: '/teacher/messages', label: 'Messages', icon: '💬' },
           { path: '/teacher/profile', label: 'Profile', icon: '👤' }
         ];
       case 'student':
         return [
           { path: '/student', label: 'Dashboard', icon: '📊' },
           { path: '/student/classes', label: 'My Classes', icon: '📚' },
-          { path: '/student/assignments', label: 'My Assignments', icon: '📝' },
+          { path: '/student/assignments', label: 'My Assignments', icon: '�' },
+          { path: '/student/messages', label: 'Messages', icon: '💬' },
           { path: '/student/profile', label: 'Profile', icon: '👤' }
         ];
       default:
@@ -41,76 +51,34 @@ const Sidebar = () => {
   const menuItems = getMenuItems();
 
   return (
-    <div style={styles.sidebar}>
-      <div style={styles.sidebarHeader}>
-        <h3 style={styles.roleTitle}>{role?.toUpperCase()} PANEL</h3>
+    <>
+      {/* Overlay for mobile */}
+      <div 
+        className={`sidebar-overlay ${isOpen ? 'active' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      
+      <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <h3>{role?.toUpperCase()} PANEL</h3>
+        </div>
+        <ul className="sidebar-menu">
+          {menuItems.map((item) => (
+            <li key={item.path} className="sidebar-menu-item">
+              <Link
+                to={item.path}
+                className={`sidebar-menu-link ${location.pathname === item.path ? 'sidebar-menu-link-active' : ''}`}
+              >
+                <span className="sidebar-menu-icon">{item.icon}</span>
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul style={styles.menu}>
-        {menuItems.map((item) => (
-          <li key={item.path} style={styles.menuItem}>
-            <Link
-              to={item.path}
-              style={{
-                ...styles.menuLink,
-                ...(location.pathname === item.path ? styles.menuLinkActive : {})
-              }}
-            >
-              <span style={styles.icon}>{item.icon}</span>
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    </>
   );
-};
-
-const styles = {
-  sidebar: {
-    width: '250px',
-    backgroundColor: colors.primary,
-    minHeight: '100vh',
-    position: 'fixed',
-    left: 0,
-    top: '60px',
-    paddingTop: '20px',
-    boxShadow: '2px 0 5px rgba(0,0,0,0.1)'
-  },
-  sidebarHeader: {
-    padding: '20px',
-    textAlign: 'center',
-    borderBottom: `2px solid ${colors.secondary}`
-  },
-  roleTitle: {
-    color: colors.secondary,
-    margin: 0,
-    fontSize: '1.2rem'
-  },
-  menu: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0
-  },
-  menuItem: {
-    margin: 0
-  },
-  menuLink: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '15px 20px',
-    color: colors.white,
-    textDecoration: 'none',
-    transition: 'background-color 0.3s',
-    fontSize: '1rem'
-  },
-  menuLinkActive: {
-    backgroundColor: colors.buttonHover,
-    borderLeft: `4px solid ${colors.secondary}`
-  },
-  icon: {
-    marginRight: '10px',
-    fontSize: '1.2rem'
-  }
 };
 
 export default Sidebar;

@@ -25,7 +25,9 @@ class Assignment {
 
     static async findByTeacher(teacher_id) {
         const query = `
-            SELECT a.*, c.title as class_title, COUNT(s.id) as submission_count
+            SELECT a.*, c.title as class_title, 
+                   COUNT(s.id) as submission_count,
+                   COUNT(s.id) as submissions_count
             FROM assignments a
             JOIN classes c ON a.class_id = c.id
             LEFT JOIN submissions s ON a.id = s.assignment_id
@@ -51,7 +53,9 @@ class Assignment {
 
     static async findAll() {
         const query = `
-            SELECT a.*, u.name as teacher_name, c.title as class_title, COUNT(s.id) as submission_count
+            SELECT a.*, u.name as teacher_name, c.title as class_title, 
+                   COUNT(s.id) as submission_count,
+                   COUNT(s.id) as submissions_count
             FROM assignments a
             JOIN users u ON a.teacher_id = u.id
             JOIN classes c ON a.class_id = c.id
@@ -79,9 +83,45 @@ class Assignment {
     }
 
     static async delete(id) {
-        const query = 'DELETE FROM assignments WHERE id = ?';
-        const [result] = await db.promise().query(query, [id]);
-        return result.affectedRows > 0;
+        const connection = await db.promise().getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Delete dependent rows explicitly to support databases without full ON DELETE CASCADE.
+            try {
+                await connection.query('DELETE FROM notifications WHERE assignment_id = ?', [id]);
+            } catch (error) {
+                if (!error || error.code !== 'ER_NO_SUCH_TABLE') {
+                    throw error;
+                }
+            }
+
+            try {
+                await connection.query('DELETE FROM assignment_students WHERE assignment_id = ?', [id]);
+            } catch (error) {
+                if (!error || error.code !== 'ER_NO_SUCH_TABLE') {
+                    throw error;
+                }
+            }
+
+            try {
+                await connection.query('DELETE FROM submissions WHERE assignment_id = ?', [id]);
+            } catch (error) {
+                if (!error || error.code !== 'ER_NO_SUCH_TABLE') {
+                    throw error;
+                }
+            }
+
+            const [result] = await connection.query('DELETE FROM assignments WHERE id = ?', [id]);
+
+            await connection.commit();
+            return result.affectedRows > 0;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 
     static async isDeadlinePassed(assignment_id) {

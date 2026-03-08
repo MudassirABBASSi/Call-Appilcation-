@@ -50,6 +50,16 @@ const Class = {
     db.query(query, callback);
   },
 
+  findById: (id, callback) => {
+    const query = `
+      SELECT classes.*, users.name as teacher_name 
+      FROM classes 
+      JOIN users ON classes.teacher_id = users.id
+      WHERE classes.id = ?
+    `;
+    db.query(query, [id], callback);
+  },
+
   deleteById: (id, callback) => {
     const query = 'DELETE FROM classes WHERE id = ?';
     db.query(query, [id], callback);
@@ -66,39 +76,6 @@ const Class = {
     const query = 'INSERT INTO class_students (class_id, student_id) VALUES ?';
     
     db.query(query, [values], callback);
-  },
-
-  // Get students in a class (Promise version for assignments)
-  getStudents: async (classId) => {
-    try {
-      const query = `
-        SELECT users.id, users.name, users.email
-        FROM users
-        JOIN class_students cs ON users.id = cs.student_id
-        WHERE cs.class_id = ? AND users.role = 'student'
-        ORDER BY users.name ASC
-      `;
-      const [rows] = await db.promise().query(query, [classId]);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Find by ID (Promise version)
-  findById: async (id) => {
-    try {
-      const query = `
-        SELECT classes.*, users.name as teacher_name 
-        FROM classes 
-        JOIN users ON classes.teacher_id = users.id
-        WHERE classes.id = ?
-      `;
-      const [rows] = await db.promise().query(query, [id]);
-      return rows[0] || null;
-    } catch (error) {
-      throw error;
-    }
   }
 };
 

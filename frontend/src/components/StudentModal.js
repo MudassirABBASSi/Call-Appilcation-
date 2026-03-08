@@ -108,7 +108,7 @@ const StudentModal = ({ isOpen, onClose, onSave, student = null }) => {
             style={styles.closeBtn}
             disabled={loading}
           >
-            ✕
+            ×
           </button>
         </div>
 

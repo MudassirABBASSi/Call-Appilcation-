@@ -1,8 +1,10 @@
 const Attendance = require('../models/Attendance');
+const notificationHelper = require('../utils/notificationHelper');
+const db = require('../config/db');
 
 const attendanceController = {
   // Mark student as present
-  markPresent: (req, res) => {
+  markPresent: async (req, res) => {
     try {
       const { classId, studentId } = req.body;
       const joinTime = new Date();
@@ -11,9 +13,28 @@ const attendanceController = {
         return res.status(400).json({ message: 'classId and studentId are required' });
       }
 
-      Attendance.markPresent(classId, studentId, joinTime, (err, result) => {
+      Attendance.markPresent(classId, studentId, joinTime, async (err, result) => {
         if (err) {
           return res.status(500).json({ message: 'Error marking attendance', error: err });
+        }
+
+        // Send notification to student
+        try {
+          const promiseDb = db.promise();
+          const [classData] = await promiseDb.query(
+            'SELECT title FROM classes WHERE id = ?',
+            [classId]
+          );
+          if (classData && classData.length > 0) {
+            await notificationHelper.notifyAttendanceMarked(
+              studentId,
+              classData[0].title,
+              'present',
+              classId
+            );
+          }
+        } catch (notifErr) {
+          console.error('Notification error:', notifErr);
         }
 
         res.json({
@@ -29,7 +50,7 @@ const attendanceController = {
   },
 
   // Mark student as absent
-  markAbsent: (req, res) => {
+  markAbsent: async (req, res) => {
     try {
       const { classId, studentId } = req.body;
 
@@ -37,9 +58,28 @@ const attendanceController = {
         return res.status(400).json({ message: 'classId and studentId are required' });
       }
 
-      Attendance.markAbsent(classId, studentId, (err, result) => {
+      Attendance.markAbsent(classId, studentId, async (err, result) => {
         if (err) {
           return res.status(500).json({ message: 'Error marking absence', error: err });
+        }
+
+        // Send notification to student
+        try {
+          const promiseDb = db.promise();
+          const [classData] = await promiseDb.query(
+            'SELECT title FROM classes WHERE id = ?',
+            [classId]
+          );
+          if (classData && classData.length > 0) {
+            await notificationHelper.notifyAttendanceMarked(
+              studentId,
+              classData[0].title,
+              'absent',
+              classId
+            );
+          }
+        } catch (notifErr) {
+          console.error('Notification error:', notifErr);
         }
 
         res.json({
